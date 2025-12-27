@@ -9,7 +9,7 @@ import {
   Laptop, 
   Wifi, 
   Bluetooth, 
-  Smartphone, 
+   smartphone, 
   Lock, 
   Database, 
   Cpu, 
@@ -25,9 +25,14 @@ import {
   Zap,
   ArrowRight,
   ShieldAlert,
-  Loader2
+  Loader2,
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  ChevronLeft
 } from 'lucide-react';
-import { AccentColor } from '../types';
+import { AccentColor, UserAccount } from '../types';
 
 interface SettingsProps {
   setWallpaper: (url: string) => void;
@@ -35,6 +40,10 @@ interface SettingsProps {
   setActiveTab: (tab: any) => void;
   accentColor: AccentColor;
   setAccentColor: (color: AccentColor) => void;
+  users: UserAccount[];
+  setUsers: React.Dispatch<React.SetStateAction<UserAccount[]>>;
+  currentUser: UserAccount;
+  setCurrentUser: React.Dispatch<React.SetStateAction<UserAccount>>;
 }
 
 const WALLPAPERS = [
@@ -54,9 +63,62 @@ const ACCENTS: { id: AccentColor, color: string }[] = [
   { id: 'amber', color: 'bg-amber-500' }
 ];
 
-const Settings: React.FC<SettingsProps> = ({ setWallpaper, activeTab, setActiveTab, accentColor, setAccentColor }) => {
+const AVATAR_COLORS = [
+  'bg-blue-600', 'bg-purple-600', 'bg-rose-600', 'bg-emerald-600', 'bg-amber-600', 'bg-slate-700', 'bg-indigo-600'
+];
+
+const Settings: React.FC<SettingsProps> = ({ 
+  setWallpaper, 
+  activeTab, 
+  setActiveTab, 
+  accentColor, 
+  setAccentColor,
+  users,
+  setUsers,
+  currentUser,
+  setCurrentUser
+}) => {
   const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'available' | 'installing' | 'completed'>('idle');
   const [progress, setProgress] = useState(0);
+
+  // User Management State
+  const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', avatarColor: 'bg-blue-600', initials: '' });
+
+  const handleEditUser = (user: UserAccount) => {
+    setEditingUser(user);
+    setFormData({ name: user.name, email: user.email, avatarColor: user.avatarColor, initials: user.initials });
+  };
+
+  const handleAddUser = () => {
+    setIsAddingUser(true);
+    setFormData({ name: '', email: '', avatarColor: 'bg-indigo-600', initials: '' });
+  };
+
+  const saveUser = () => {
+    if (editingUser) {
+      const updatedUsers = users.map(u => u.id === editingUser.id ? { ...u, ...formData } : u);
+      setUsers(updatedUsers);
+      if (currentUser.id === editingUser.id) {
+        setCurrentUser({ ...currentUser, ...formData });
+      }
+      setEditingUser(null);
+    } else if (isAddingUser) {
+      const newUser: UserAccount = {
+        id: `u${Date.now()}`,
+        ...formData,
+        isAdmin: false
+      };
+      setUsers([...users, newUser]);
+      setIsAddingUser(false);
+    }
+  };
+
+  const deleteUser = (id: string) => {
+    if (id === currentUser.id) return; // Cannot delete self
+    setUsers(users.filter(u => u.id !== id));
+  };
 
   const checkUpdates = () => {
     setUpdateState('checking');
@@ -84,31 +146,126 @@ const Settings: React.FC<SettingsProps> = ({ setWallpaper, activeTab, setActiveT
     switch (activeTab) {
       case 'Accounts':
         return (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="flex items-center gap-6 p-8 bg-white rounded-3xl shadow-sm border border-gray-100">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-xl transition-all hover:scale-105 cursor-pointer ${
-                accentColor === 'blue' ? 'bg-blue-600' : 
-                accentColor === 'purple' ? 'bg-purple-600' : 
-                accentColor === 'rose' ? 'bg-rose-600' : 
-                accentColor === 'emerald' ? 'bg-emerald-600' : 'bg-amber-600'
-              }`}>JD</div>
-              <div className="flex-1">
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight">John Doe</h3>
-                <p className="text-sm text-gray-400 font-medium">Administrator • john.doe@chimera.os</p>
-                <div className="flex gap-2 mt-4">
-                  <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold transition-all">Manage Account</button>
-                  <button className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all">Sign Out</button>
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 pb-20">
+            {/* User Editor Overlay */}
+            {(editingUser || isAddingUser) ? (
+              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200">
+                <div className="flex items-center gap-4 mb-8">
+                  <button onClick={() => { setEditingUser(null); setIsAddingUser(false); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <ChevronLeft size={24} />
+                  </button>
+                  <h3 className="text-2xl font-black text-gray-900">{editingUser ? 'Edit Profile' : 'Add New Account'}</h3>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-black text-white shadow-xl ${formData.avatarColor}`}>
+                      {formData.initials || '?'}
+                    </div>
+                    <div className="flex gap-2">
+                      {AVATAR_COLORS.map(color => (
+                        <button 
+                          key={color}
+                          onClick={() => setFormData(prev => ({ ...prev, avatarColor: color }))}
+                          className={`w-8 h-8 rounded-full ${color} border-2 ${formData.avatarColor === color ? 'border-blue-500 scale-110' : 'border-transparent opacity-60'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Full Name</label>
+                      <input 
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        value={formData.name}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const initials = val.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                          setFormData(prev => ({ ...prev, name: val, initials }));
+                        }}
+                        placeholder="e.g. Jane Smith"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Hybrid Email</label>
+                      <input 
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        value={formData.email}
+                        onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="jane@chimera.os"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button onClick={saveUser} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all">
+                      Save Account
+                    </button>
+                    <button onClick={() => { setEditingUser(null); setIsAddingUser(false); }} className="px-8 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <section className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Security Details</h4>
-              <div className="grid gap-3">
-                <SettingsTile icon={<Shield size={18} />} title="Core Shield" sub="Protected by Hybrid Firewall" status="Active" />
-                <SettingsTile icon={<Lock size={18} />} title="Encrypted Volume" sub="FileVault v4.2 active" status="Enabled" />
-              </div>
-            </section>
+            ) : (
+              <>
+                <div className="flex items-center gap-6 p-8 bg-white rounded-3xl shadow-sm border border-gray-100">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-xl transition-all hover:scale-105 cursor-pointer ${currentUser.avatarColor}`}>
+                    {currentUser.initials}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-black text-gray-900 tracking-tight">{currentUser.name}</h3>
+                    <p className="text-sm text-gray-400 font-medium">{currentUser.isAdmin ? 'System Administrator' : 'Standard User'} • {currentUser.email}</p>
+                    <div className="flex gap-2 mt-4">
+                      <button onClick={() => handleEditUser(currentUser)} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+                        <Edit2 size={12} /> Edit Profile
+                      </button>
+                      <button className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all">
+                        Security Settings
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Other Accounts</h4>
+                    <button onClick={handleAddUser} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors">
+                      <Plus size={12} /> Add User
+                    </button>
+                  </div>
+                  <div className="grid gap-3">
+                    {users.filter(u => u.id !== currentUser.id).map(user => (
+                      <div key={user.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-50 shadow-sm group hover:border-blue-500/20 transition-all">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black text-white ${user.avatarColor}`}>
+                            {user.initials}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">{user.name}</p>
+                            <p className="text-[10px] text-gray-400 font-medium">{user.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                           <button onClick={() => handleEditUser(user)} className="p-2 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all">
+                              <Edit2 size={14} />
+                           </button>
+                           <button onClick={() => deleteUser(user.id)} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                              <Trash2 size={14} />
+                           </button>
+                        </div>
+                      </div>
+                    ))}
+                    {users.length === 1 && (
+                      <div className="p-10 text-center border-2 border-dashed border-gray-100 rounded-3xl opacity-40">
+                         <p className="text-xs font-bold">No secondary accounts on this kernel.</p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </>
+            )}
           </div>
         );
 

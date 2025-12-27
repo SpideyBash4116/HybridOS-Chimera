@@ -39,9 +39,11 @@ import {
   Twitter,
   Linkedin,
   MessageSquare,
-  Music2
+  Music2,
+  Users,
+  ChevronLeft
 } from 'lucide-react';
-import { AppID, WindowState, VFSNode, AccentColor } from './types';
+import { AppID, WindowState, VFSNode, AccentColor, UserAccount } from './types';
 import { APPS, INITIAL_VFS, APP_MENUS } from './constants';
 import Terminal from './components/Terminal';
 import FileManager from './components/FileManager';
@@ -60,9 +62,16 @@ import MissionControl from './components/MissionControl';
 import AppStore from './components/AppStore';
 import SocialApp from './components/SocialApp';
 
+const DEFAULT_USERS: UserAccount[] = [
+  { id: 'u1', name: 'John Doe', email: 'john.doe@chimera.os', avatarColor: 'bg-blue-600', initials: 'JD', isAdmin: true }
+];
+
 const App: React.FC = () => {
   const [booting, setBooting] = useState(true);
   const [isLocked, setIsLocked] = useState(true);
+  const [users, setUsers] = useState<UserAccount[]>(DEFAULT_USERS);
+  const [currentUser, setCurrentUser] = useState<UserAccount>(DEFAULT_USERS[0]);
+  const [selectedLockUser, setSelectedLockUser] = useState<UserAccount>(DEFAULT_USERS[0]);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
   const [windows, setWindows] = useState<WindowState[]>([]);
@@ -127,10 +136,13 @@ const App: React.FC = () => {
 
   const handleUnlock = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (password === 'admin' || password === '') {
+    // In this simulation, password 'admin' or empty works for the default user, 
+    // or anything for other users (no real security enforced)
+    if (password === 'admin' || password === '' || selectedLockUser.id !== 'u1') {
       setIsLocked(false);
+      setCurrentUser(selectedLockUser);
       setPassword('');
-      addNotification("Welcome back, John. System ready.");
+      addNotification(`Welcome back, ${selectedLockUser.name.split(' ')[0]}. System ready.`);
     } else {
       setAuthError(true);
       setTimeout(() => setAuthError(false), 500);
@@ -252,27 +264,43 @@ const App: React.FC = () => {
           </p>
         </div>
 
-        <div className={`z-10 flex flex-col items-center gap-6 mb-24 transition-transform duration-300 ${authError ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
-          <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black border-4 border-white/20 shadow-2xl overflow-hidden group ${accentClass.split(' ')[0]}`}>
-            JD
+        <div className={`z-10 flex flex-col items-center gap-6 mb-24 transition-all duration-300 ${authError ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
+          <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black border-4 border-white/20 shadow-2xl overflow-hidden group transition-all ${selectedLockUser.avatarColor}`}>
+            {selectedLockUser.initials}
           </div>
-          <h2 className="text-xl font-bold tracking-tight">John Doe</h2>
+          <h2 className="text-xl font-bold tracking-tight">{selectedLockUser.name}</h2>
           
-          <form onSubmit={handleUnlock} className="relative group">
-            <input 
-              autoFocus
-              type="password"
-              placeholder="Enter Password"
-              className="bg-white/10 border border-white/20 rounded-full py-2.5 px-6 pr-12 text-sm w-64 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/40"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button 
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              <ArrowRight size={16} />
-            </button>
+          <form onSubmit={handleUnlock} className="relative group flex flex-col items-center gap-4">
+            <div className="relative">
+              <input 
+                autoFocus
+                type="password"
+                placeholder="Enter Password"
+                className="bg-white/10 border border-white/20 rounded-full py-2.5 px-6 pr-12 text-sm w-64 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/40"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button 
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <ArrowRight size={16} />
+              </button>
+            </div>
+
+            {users.length > 1 && (
+              <div className="flex gap-3 mt-4 animate-in slide-in-from-bottom-2">
+                {users.map(u => (
+                  <button 
+                    key={u.id}
+                    onClick={() => { setSelectedLockUser(u); setPassword(''); }}
+                    className={`p-1 rounded-full border-2 transition-all ${selectedLockUser.id === u.id ? 'border-blue-500 scale-110' : 'border-transparent opacity-40 hover:opacity-80'}`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black ${u.avatarColor}`}>{u.initials}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </form>
         </div>
 
@@ -338,6 +366,10 @@ const App: React.FC = () => {
                     <button className="w-full px-4 py-1 hover:bg-blue-600 text-left flex items-center justify-between" onClick={() => setIsLocked(true)}>
                         <span>Lock Screen</span>
                         <span className="text-[10px] opacity-40">⌃⌘L</span>
+                    </button>
+                    <button className="w-full px-4 py-1 hover:bg-blue-600 text-left flex items-center justify-between" onClick={() => { setIsLocked(true); setPassword(''); }}>
+                        <span>Switch User...</span>
+                        <Users size={12} className="opacity-40" />
                     </button>
                     <button className="w-full px-4 py-1 hover:bg-blue-600 text-left flex items-center justify-between">
                         <span>Restart...</span>
@@ -411,7 +443,19 @@ const App: React.FC = () => {
             {win.id === 'browser' && <Browser />}
             {win.id === 'ai' && <NovaAI />}
             {win.id === 'notepad' && <Notepad initialContent={tempFileContent} />}
-            {win.id === 'settings' && <Settings setWallpaper={setWallpaper} activeTab={settingsTab} setActiveTab={setSettingsTab} accentColor={accentColor} setAccentColor={setAccentColor} />}
+            {win.id === 'settings' && (
+              <Settings 
+                setWallpaper={setWallpaper} 
+                activeTab={settingsTab} 
+                setActiveTab={setSettingsTab} 
+                accentColor={accentColor} 
+                setAccentColor={setAccentColor}
+                users={users}
+                setUsers={setUsers}
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            )}
             {win.id === 'game' && <AtlasReign />}
             {win.id === 'music' && <MusicPlayer />}
             {win.id === 'monitor' && <SystemMonitor />}
@@ -451,8 +495,13 @@ const App: React.FC = () => {
 
             <div className="mt-auto bg-white/5 -mx-10 -mb-10 p-8 flex items-center justify-between border-t border-white/5">
                 <div className="flex items-center gap-4 px-3 py-2 hover:bg-white/5 rounded-2xl cursor-pointer transition-colors">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black border border-white/20 shadow-lg ${accentClass.split(' ')[0]}`}>JD</div>
-                    <div className="flex flex-col"><span className="text-sm font-bold">John Doe</span><span className="text-[10px] opacity-40 uppercase font-black tracking-widest">Admin</span></div>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black border border-white/20 shadow-lg ${currentUser.avatarColor}`}>
+                      {currentUser.initials}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold">{currentUser.name}</span>
+                      <span className="text-[10px] opacity-40 uppercase font-black tracking-widest">{currentUser.isAdmin ? 'Admin' : 'User'}</span>
+                    </div>
                 </div>
                 <div className="flex gap-2">
                     <button className="p-3 hover:bg-white/10 rounded-xl transition-colors" onClick={() => launchApp('settings')}><SettingsIcon size={18} className="opacity-60" /></button>

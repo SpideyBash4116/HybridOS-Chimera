@@ -3,6 +3,15 @@ export type AppID = 'terminal' | 'files' | 'browser' | 'settings' | 'ai' | 'note
 
 export type AccentColor = 'blue' | 'purple' | 'rose' | 'emerald' | 'amber';
 
+export interface UserAccount {
+  id: string;
+  name: string;
+  email: string;
+  avatarColor: string;
+  initials: string;
+  isAdmin: boolean;
+}
+
 export interface WindowState {
   id: AppID;
   title: string;
