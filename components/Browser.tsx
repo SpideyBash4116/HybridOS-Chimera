@@ -85,7 +85,7 @@ const Browser: React.FC = () => {
 
         <div className="flex gap-4 text-gray-500">
              <Home size={16} className="cursor-pointer hover:text-black transition-colors" onClick={() => navigate('https://chimera.os/welcome')} />
-             <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold shadow-md shadow-blue-500/20">JD</div>
+             <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold shadow-md shadow-blue-500/20">G</div>
         </div>
       </div>
 

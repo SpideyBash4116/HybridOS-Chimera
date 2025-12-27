@@ -63,7 +63,7 @@ import AppStore from './components/AppStore';
 import SocialApp from './components/SocialApp';
 
 const DEFAULT_USERS: UserAccount[] = [
-  { id: 'u1', name: 'John Doe', email: 'john.doe@chimera.os', avatarColor: 'bg-blue-600', initials: 'JD', isAdmin: true }
+  { id: 'u1', name: 'Guest', email: 'guest@chimera.os', avatarColor: 'bg-blue-600', initials: 'G', isAdmin: true }
 ];
 
 const App: React.FC = () => {

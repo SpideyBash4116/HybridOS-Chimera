@@ -7,7 +7,7 @@ const WidgetsPanel: React.FC = () => {
     <div className="absolute top-8 bottom-14 left-0 w-[420px] glass-dark border-r border-white/10 shadow-2xl z-[9000] p-8 overflow-y-auto custom-scrollbar animate-in slide-in-from-left duration-500">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-black tracking-tighter">Widgets</h2>
-        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">JD</div>
+        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">G</div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
