@@ -2,5 +2,7 @@
   "name": "HybridOS (Chimera)",
   "description": "A concept operating system blending macOS aesthetics, Windows-style taskbar and window management, and a powerful Linux-based terminal experience powered by Gemini AI.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

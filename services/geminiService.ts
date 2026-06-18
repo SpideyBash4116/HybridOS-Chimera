@@ -1,12 +1,19 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY,
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    }
+  }
+});
 
-export const askGemini = async (prompt: string, context: string = '') => {
+export const askGemini = async (prompt: string, context: string = '', modelName: string = 'gemini-3.5-flash') => {
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: modelName,
       contents: `You are an AI assistant integrated into "HybridOS Chimera". 
       Context: ${context}
       User Query: ${prompt}`,
@@ -25,7 +32,7 @@ export const askGemini = async (prompt: string, context: string = '') => {
 export const globalSearch = async (query: string) => {
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.5-flash',
       contents: `Perform a global system search for: "${query}". 
       Return a JSON array of max 3 items with: { "type": "app" | "web" | "file", "title": "string", "description": "string" }`,
       config: {
@@ -42,7 +49,7 @@ export const globalSearch = async (query: string) => {
 export const simulateWebpage = async (urlOrQuery: string) => {
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.5-flash',
       contents: `Generate the content for a simulated webpage based on this request: "${urlOrQuery}".
       Format the output as a structured JSON object with:
       {

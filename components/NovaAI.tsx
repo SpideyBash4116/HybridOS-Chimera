@@ -9,6 +9,7 @@ const NovaAI: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.5-flash');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ const NovaAI: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setIsTyping(true);
 
-    const response = await askGemini(userMsg);
+    const response = await askGemini(userMsg, '', selectedModel);
     setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     setIsTyping(false);
   };
@@ -31,13 +32,36 @@ const NovaAI: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-slate-900">
       {/* Header */}
-      <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-white/5">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-          <Sparkles size={16} className="text-white" />
+      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+            <Sparkles size={16} className="text-white" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold">Nova Assistant</h2>
+            <p className="text-[10px] opacity-50">Powered by Gemini AI</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-sm font-bold">Nova Assistant</h2>
-          <p className="text-[10px] opacity-50">Powered by Gemini AI</p>
+
+        {/* Dynamic Model Dropdown Selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] opacity-40 font-mono hidden sm:inline">Engine:</span>
+          <select 
+            id="nova-model-selector"
+            className="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] text-white opacity-80 focus:opacity-100 hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer font-mono"
+            value={selectedModel}
+            onChange={(e) => {
+              const newModel = e.target.value;
+              setSelectedModel(newModel);
+              setMessages(prev => [...prev, { 
+                role: 'assistant', 
+                content: `System: Core model switched to ${newModel === 'gemini-3.5-flash' ? 'Gemini 3.5 Flash' : 'Gemini 3.1 Flash Lite'}.` 
+              }]);
+            }}
+          >
+            <option value="gemini-3.5-flash" className="bg-slate-900 text-white">Gemini 3.5 Flash</option>
+            <option value="gemini-3.1-flash-lite" className="bg-slate-900 text-white">Gemini 3.1 Lite</option>
+          </select>
         </div>
       </div>
 
